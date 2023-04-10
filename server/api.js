@@ -48,13 +48,31 @@ router.get('/', (req, res) => {
     res.send('Hello World')
 })
 
+// TODO: replace with non-placeholder redirects
+router.get('/success', (req, res) => {
+    res.send('auth success')
+})
+router.get('/failed', (req, res) => {
+    res.send('auth success')
+})
+
 /**
  * Route configured in the Discord developer console which facilitates the
  * connection between Discord and any additional services you may use.
  * To start the flow, generate the OAuth2 consent dialog url for Discord,
  * and redirect the user there.
  */
-router.get('/linked-role', passport.authenticate('discord'));
+router.get('/linked-role', async (req, res) => {
+    const { url, state } = discord.getOAuthUrl();
+
+    // Store the signed state param in the user's cookies so we can verify
+    // the value later. See:
+    // https://discord.com/developers/docs/topics/oauth2#state-and-security
+    res.cookie('clientState', state, { maxAge: 1000 * 60 * 5, signed: true });
+
+    // Send the user to the Discord owned OAuth2 authorization endpoint
+    res.redirect(url);
+});
 
 /**
  * Route configured in the Discord developer console, the redirect Url to which
@@ -65,38 +83,10 @@ router.get('/linked-role', passport.authenticate('discord'));
  * 3. Stores the OAuth2 Discord Tokens in Redis / Firestore
  * 4. Lets the user know it's all good and to go back to Discord
  */
-router.get('/discord-oauth-callback', async (req, res) => {
-    try {
-        // 1. Uses the code and state to acquire Discord OAuth2 tokens
-        const code = req.query['code'];
-        const discordState = req.query['state'];
-
-        // make sure the state parameter exists
-        const { clientState } = req.signedCookies;
-        if (clientState !== discordState) {
-            console.error('State verification failed.');
-            return res.sendStatus(403);
-        }
-
-        const tokens = await discord.getOAuthTokens(code);
-
-        // 2. Uses the Discord Access Token to fetch the user profile
-        const meData = await discord.getUserData(tokens);
-        const userId = meData.user.id;
-        await storage.storeDiscordTokens(userId, {
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token,
-            expires_at: Date.now() + tokens.expires_in * 1000,
-        });
-
-        // 3. Update the users metadata, assuming future updates will be posted to the `/update-metadata` endpoint
-        await updateMetadata(userId);
-
-        res.send('You did it!  Now go back to Discord.');
-    } catch (e) {
-        console.error(e);
-        res.sendStatus(500);
-    }
+router.get('/discord-oauth-callback', passport.authenticate('discord', {
+    failureRedirect: '/failed'
+}), function (req, res) {
+    res.redirect('/success')
 });
 
 /**
