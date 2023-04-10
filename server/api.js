@@ -5,16 +5,11 @@ import config from './config.js';
 import Router from 'express'
 import passport from "passport";
 import DiscordStrategy from "passport-discord";
+import refresh from "passport-oauth2-refresh";
+
 const router = Router()
 
-passport.serializeUser(function(user, done) {
-    done(null, user);
-});
-passport.deserializeUser(function(obj, done) {
-    done(null, obj);
-});
-
-passport.use(new DiscordStrategy({
+const discordStrat = new DiscordStrategy({
         clientID: config.DISCORD_CLIENT_ID,
         clientSecret: config.DISCORD_CLIENT_SECRET,
         callbackURL: config.DISCORD_REDIRECT_URI,
@@ -23,19 +18,20 @@ passport.use(new DiscordStrategy({
     async (accessToken, refreshToken, profile, done) => {
         try {
             // Check if the user is already in the database
-            let user = await storage.User.findOne({ discordId: profile.id });
+            let user = await storage.User.findOne({discordId: profile.id});
 
             if (!user) {
                 // Create a new user if they're not in the database
                 user = new storage.User({
                     discordId: profile.id,
-                    discordToken: accessToken,
+                    refreshToken: refreshToken,
                 });
 
                 await user.save();
+                //await updateMetadata(user.discordId);
             } else {
                 // Update the user's access token if they're already in the database
-                user.discordToken = accessToken;
+                user.refreshToken = refreshToken;
 
                 // If the user hasn't set their game ID yet, set it to null
                 if (!user.gameId) {
@@ -43,13 +39,24 @@ passport.use(new DiscordStrategy({
                 }
 
                 await user.save();
+                //await updateMetadata(user.discordId);
             }
 
             done(null, user);
         } catch (error) {
             done(error);
         }
-    }));
+    });
+
+passport.serializeUser(function (user, done) {
+    done(null, user);
+});
+passport.deserializeUser(function (obj, done) {
+    done(null, obj);
+});
+
+passport.use(discordStrat);
+refresh.use(discordStrat)
 
 router.get('/', (req, res) => {
     res.send('Hello World')
@@ -70,12 +77,12 @@ router.get('/failed', (req, res) => {
  * and redirect the user there.
  */
 router.get('/linked-role', async (req, res) => {
-    const { url, state } = discord.getOAuthUrl();
+    const {url, state} = discord.getOAuthUrl();
 
     // Store the signed state param in the user's cookies so we can verify
     // the value later. See:
     // https://discord.com/developers/docs/topics/oauth2#state-and-security
-    res.cookie('clientState', state, { maxAge: 1000 * 60 * 5, signed: true });
+    res.cookie('clientState', state, {maxAge: 1000 * 60 * 5, signed: true});
 
     // Send the user to the Discord owned OAuth2 authorization endpoint
     res.redirect(url);

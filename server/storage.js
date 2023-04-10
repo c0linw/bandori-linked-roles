@@ -3,7 +3,7 @@ import {Schema, model} from 'mongoose';
 const store = new Map();
 const userSchema = new Schema({
   discordId: String,
-  discordToken: String,
+  refreshToken: String,
   gameId: {
     en: Number,
     jp: Number,
@@ -12,6 +12,7 @@ const userSchema = new Schema({
 
 export const User = model('User', userSchema)
 
+// TODO: store/get tokens from mongodb instead
 export async function storeDiscordTokens(userId, tokens) {
   await store.set(`discord-${userId}`, tokens);
 }
