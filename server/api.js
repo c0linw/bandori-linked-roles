@@ -7,6 +7,13 @@ import passport from "passport";
 import DiscordStrategy from "passport-discord";
 const router = Router()
 
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+passport.deserializeUser(function(obj, done) {
+    done(null, obj);
+});
+
 passport.use(new DiscordStrategy({
         clientID: config.DISCORD_CLIENT_ID,
         clientSecret: config.DISCORD_CLIENT_SECRET,

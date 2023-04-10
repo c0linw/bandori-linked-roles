@@ -6,12 +6,18 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import mongoose from  'mongoose';
 import router from './api.js';
+import session from 'express-session';
 
 const app = express()
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser(config.COOKIE_SECRET));
+app.use(session({
+    secret: config.COOKIE_SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
 
 mongoose
     .connect(process.env.MONGO_URI, {
