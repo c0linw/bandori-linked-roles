@@ -13,6 +13,14 @@ router.get('/', (req, res) => {
     res.send('Hello World')
 })
 
+router.get('/authtest', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.send('You are authenticated')
+    } else {
+        res.send('You are not authenticated')
+    }
+})
+
 // TODO: replace with non-placeholder redirects
 router.get('/success', (req, res) => {
     res.send('auth success')
