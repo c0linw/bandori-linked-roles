@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 
 import * as storage from './storage.js';
 import config from './config.js';
+import refresh from "passport-oauth2-refresh";
 
 /**
  * Code specific to communicating with the Discord API.
@@ -13,7 +14,6 @@ import config from './config.js';
  * See https://discord.com/developers/docs/topics/oauth2 for more details.
  */
 
-/**
 /**
  * Generate the url which the user will be directed to in order to approve the
  * bot, and see the list of requested scopes.
@@ -66,31 +66,13 @@ export async function getOAuthTokens(code) {
  * refresh token to acquire a new, fresh access token.
  */
 export async function getAccessToken(userId, tokens) {
-  if (Date.now() > tokens.expires_at) {
-    const url = 'https://discord.com/api/v10/oauth2/token';
-    const body = new URLSearchParams({
-      client_id: config.DISCORD_CLIENT_ID,
-      client_secret: config.DISCORD_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: tokens.refresh_token,
-    });
-    const response = await fetch(url, {
-      body,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    if (response.ok) {
-      const tokens = await response.json();
-      tokens.expires_at = Date.now() + tokens.expires_in * 1000;
-      await storage.storeDiscordTokens(userId, tokens);
-      return tokens.access_token;
-    } else {
-      throw new Error(`Error refreshing access token: [${response.status}] ${response.statusText}`);
+  const refreshToken = storage.getRefreshToken(userId)
+  refresh.requestNewAccessToken('discord', refreshToken, function(err, accessToken, refreshToken) {
+    if (err) {
+      throw new Error("failed to fetch new access token using refresh token")
     }
-  }
-  return tokens.access_token;
+    return accessToken;
+  });
 }
 
 /**

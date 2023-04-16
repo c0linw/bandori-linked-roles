@@ -12,11 +12,19 @@ const userSchema = new Schema({
 
 export const User = model('User', userSchema)
 
-// TODO: store/get tokens from mongodb instead
-export async function storeDiscordTokens(userId, tokens) {
-  await store.set(`discord-${userId}`, tokens);
+export async function storeRefreshToken(userId, token) {
+  let user = new User({
+    discordId: userId,
+    refreshToken: token,
+  });
+
+  await user.save();
 }
 
-export async function getDiscordTokens(userId) {
-  return store.get(`discord-${userId}`);
+export async function getRefreshToken(userId) {
+  let user = await User.findOne({discordId: userId});
+  if (!user) {
+    return null
+  }
+  return user.refreshToken;
 }
