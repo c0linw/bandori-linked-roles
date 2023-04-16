@@ -1,5 +1,5 @@
-import fetch from 'node-fetch';
-import config from './config.js';
+const fetch = require('node-fetch');
+const config = require('./config.js').config;
 
 /**
  * Register the metadata to be stored by Discord. This should be a one time action.

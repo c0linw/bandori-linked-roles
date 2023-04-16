@@ -3,6 +3,7 @@ const storage = require('./storage.js');
 
 const Router = require('express');
 const passport = require('passport');
+const fetch = require('node-fetch');
 
 const router = Router()
 
@@ -114,13 +115,25 @@ async function updateMetadata(userId) {
     let metadata = {};
     try {
         // 1. get user's game ID
+        let user = await storage.User.findOne({discordId: userId})
         // 2. query bestdori
+        let url = `https://bestdori.com/api/player/en/${user.gameId.en}?mode=2`
+        let response = await fetch(url, {method: 'GET'})
         // 3. extract data
-        metadata = {
-            cookieseaten: 1483,
-            allergictonuts: 0, // 0 for false, 1 for true
-            firstcookiebaked: '2003-12-20',
-        };
+        if (response.ok) {
+            const data = await response.json();
+            // TODO: handle bestdori data in a more robust way
+            let fc_count = data.data.profile.fullComboMusicCountMap.entries.expert + data.data.profile.fullComboMusicCountMap.entries.special;
+            metadata = {
+                player_rank: data.data.profile.rank,
+                fc_count: fc_count,
+                id: data.data.profile.userId,
+            };
+            // Push the data to Discord.
+            await discord.pushMetadata(userId, metadata);
+        } else {
+            throw new Error(`Error getting Bestdori user data: [${response.status}] ${response.statusText}`);
+        }
     } catch (e) {
         e.message = `Error fetching external data: ${e.message}`;
         console.error(e);
@@ -129,9 +142,6 @@ async function updateMetadata(userId) {
         // where the user revokes an external app permissions, and is left with
         // stale linked role data.
     }
-
-    // Push the data to Discord.
-    await discord.pushMetadata(userId, metadata);
 }
 
 module.exports = {
