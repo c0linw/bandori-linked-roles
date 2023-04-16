@@ -1,15 +1,15 @@
-import cookieParser from "cookie-parser";
-import config from './config.js';
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import mongoose from  'mongoose';
-import router from './api.js';
-import session from 'express-session';
-import passport from "passport";
-import refresh from "passport-oauth2-refresh";
-import DiscordStrategy from "passport-discord";
-import * as storage from "./storage.js";
+const cookieParser = require("cookie-parser");
+const config = require('./config.js').config;
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const router = require('./api.js').router;
+const session = require('express-session');
+const passport  = require("passport");
+const refresh = require("passport-oauth2-refresh");
+const DiscordStrategy = require("passport-discord").Strategy;
+const storage = require("./storage.js");
 
 const app = express()
 

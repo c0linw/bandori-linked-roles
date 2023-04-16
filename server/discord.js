@@ -1,9 +1,9 @@
-import crypto from 'crypto';
-import fetch from 'node-fetch';
+const crypto = require('crypto');
+const fetch = require('node-fetch');
 
-import * as storage from './storage.js';
-import config from './config.js';
-import refresh from "passport-oauth2-refresh";
+const storage = require('./storage.js');
+const config = require('./config.js');
+const refresh = require('passport-oauth2-refresh');
 
 /**
  * Code specific to communicating with the Discord API.
@@ -18,7 +18,7 @@ import refresh from "passport-oauth2-refresh";
  * Generate the url which the user will be directed to in order to approve the
  * bot, and see the list of requested scopes.
  */
-export function getOAuthUrl() {
+function getOAuthUrl() {
   const state = crypto.randomUUID();
 
   const url = new URL('https://discord.com/api/oauth2/authorize');
@@ -35,7 +35,7 @@ export function getOAuthUrl() {
  * Given an OAuth2 code from the scope approval page, make a request to Discord's
  * OAuth2 service to retrieve an access token, refresh token, and expiration.
  */
-export async function getOAuthTokens(code) {
+async function getOAuthTokens(code) {
   const url = 'https://discord.com/api/v10/oauth2/token';
   const body = new URLSearchParams({
     client_id: config.DISCORD_CLIENT_ID,
@@ -65,7 +65,7 @@ export async function getOAuthTokens(code) {
  * token.  Check if the access token has expired, and if it has, use the
  * refresh token to acquire a new, fresh access token.
  */
-export async function getAccessToken(userId) {
+async function getAccessToken(userId) {
   const refreshToken = storage.getRefreshToken(userId)
   refresh.requestNewAccessToken('discord', refreshToken, function(err, accessToken, refreshToken) {
     if (err) {
@@ -78,7 +78,7 @@ export async function getAccessToken(userId) {
 /**
  * Given a user based access token, fetch profile information for the current user.
  */
-export async function getUserData(tokens) {
+async function getUserData(tokens) {
   const url = 'https://discord.com/api/v10/oauth2/@me';
   const response = await fetch(url, {
     headers: {
@@ -97,7 +97,7 @@ export async function getUserData(tokens) {
  * Given metadata that matches the schema, push that data to Discord on behalf
  * of the current user.
  */
-export async function pushMetadata(userId, metadata) {
+async function pushMetadata(userId, metadata) {
   // PUT /users/@me/applications/:id/role-connection
   const url = `https://discord.com/api/v10/users/@me/applications/${config.DISCORD_CLIENT_ID}/role-connection`;
   const accessToken = await getAccessToken(userId);
@@ -122,7 +122,7 @@ export async function pushMetadata(userId, metadata) {
  * Fetch the metadata currently pushed to Discord for the currently logged
  * in user, for this specific bot.
  */
-export async function getMetadata(userId) {
+async function getMetadata(userId) {
   // GET /users/@me/applications/:id/role-connection
   const url = `https://discord.com/api/v10/users/@me/applications/${config.DISCORD_CLIENT_ID}/role-connection`;
   const accessToken = await getAccessToken(userId);
@@ -137,4 +137,13 @@ export async function getMetadata(userId) {
   } else {
     throw new Error(`Error getting discord metadata: [${response.status}] ${response.statusText}`);
   }
+}
+
+module.exports = {
+  getOAuthUrl,
+  getOAuthTokens,
+  getAccessToken,
+  getUserData,
+  pushMetadata,
+  getMetadata
 }

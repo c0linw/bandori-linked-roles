@@ -1,14 +1,8 @@
-import * as discord from './discord.js';
-import * as storage from './storage.js';
+const discord = require('./discord.js');
+const storage = require('./storage.js');
 
-import config from './config.js';
-import Router from 'express'
-import passport from "passport";
-import DiscordStrategy from "passport-discord";
-import refresh from "passport-oauth2-refresh";
-const { createSSRApp } = require("vue");
-const { renderToString } = require("@vue/server-renderer");
-const Profile = require("./views/profile.vue").default;
+const Router = require('express');
+const passport = require('passport');
 
 const router = Router()
 
@@ -27,22 +21,6 @@ router.get('/authtest', (req, res) => {
 router.get('/failed', (req, res) => {
     res.send('auth failed')
 })
-
-router.get("/profile", async (req, res) => {
-    if (req.isAuthenticated()) {
-        try {
-            const app = createSSRApp(Profile, { user: req.user });
-            const html = await renderToString(app);
-
-            res.send(html);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send("Internal Server Error");
-        }
-    } else {
-        res.redirect("/login");
-    }
-});
 
 router.get('/profile/update', (req, res) => {
     if (req.isAuthenticated()) {
@@ -68,8 +46,9 @@ router.post('/profile/update', async (req, res) => {
             user.gameId.en = req.body.gameId;
 
             await user.save();
+            await updateMetadata(user.gameId.en)
 
-            res.redirect('/profile');
+            res.redirect('/authtest');
         } catch (error) {
             res.status(500).send('Internal Server Error');
         }
@@ -155,4 +134,6 @@ async function updateMetadata(userId) {
     await discord.pushMetadata(userId, metadata);
 }
 
-export default router;
+module.exports = {
+    router
+}

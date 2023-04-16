@@ -1,6 +1,5 @@
-import {Schema, model} from 'mongoose';
+const {Schema, model} = require('mongoose');
 
-const store = new Map();
 const userSchema = new Schema({
   discordId: String,
   refreshToken: String,
@@ -10,9 +9,9 @@ const userSchema = new Schema({
   },
 });
 
-export const User = model('User', userSchema)
+const User = model('User', userSchema)
 
-export async function storeRefreshToken(userId, token) {
+async function storeRefreshToken(userId, token) {
   let user = new User({
     discordId: userId,
     refreshToken: token,
@@ -21,10 +20,16 @@ export async function storeRefreshToken(userId, token) {
   await user.save();
 }
 
-export async function getRefreshToken(userId) {
+async function getRefreshToken(userId) {
   let user = await User.findOne({discordId: userId});
   if (!user) {
     return null
   }
   return user.refreshToken;
+}
+
+module.exports = {
+  User,
+  storeRefreshToken,
+  getRefreshToken
 }

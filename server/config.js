@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv'
+const dotenv = require('dotenv');
 
 /**
  * Load environment variables from a .env file, if it exists.
@@ -14,4 +14,6 @@ const config = {
   COOKIE_SECRET: process.env.COOKIE_SECRET,
 };
 
-export default config;
+module.exports={
+  config
+}
