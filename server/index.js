@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import config from './config.js';
 import express from 'express';
 import cors from 'cors';
@@ -20,6 +21,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(cookieParser(config.COOKIE_SECRET));
 app.use(bodyParser.json());
 
 const discordStrat = new DiscordStrategy({

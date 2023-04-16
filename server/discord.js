@@ -65,7 +65,7 @@ export async function getOAuthTokens(code) {
  * token.  Check if the access token has expired, and if it has, use the
  * refresh token to acquire a new, fresh access token.
  */
-export async function getAccessToken(userId, tokens) {
+export async function getAccessToken(userId) {
   const refreshToken = storage.getRefreshToken(userId)
   refresh.requestNewAccessToken('discord', refreshToken, function(err, accessToken, refreshToken) {
     if (err) {
@@ -97,12 +97,12 @@ export async function getUserData(tokens) {
  * Given metadata that matches the schema, push that data to Discord on behalf
  * of the current user.
  */
-export async function pushMetadata(userId, tokens, metadata) {
+export async function pushMetadata(userId, metadata) {
   // PUT /users/@me/applications/:id/role-connection
   const url = `https://discord.com/api/v10/users/@me/applications/${config.DISCORD_CLIENT_ID}/role-connection`;
-  const accessToken = await getAccessToken(userId, tokens);
+  const accessToken = await getAccessToken(userId);
   const body = {
-    platform_name: 'Example Linked Role Discord Bot',
+    platform_name: 'Kanon Bot Linked Roles',
     metadata,
   };
   const response = await fetch(url, {
@@ -122,10 +122,10 @@ export async function pushMetadata(userId, tokens, metadata) {
  * Fetch the metadata currently pushed to Discord for the currently logged
  * in user, for this specific bot.
  */
-export async function getMetadata(userId, tokens) {
+export async function getMetadata(userId) {
   // GET /users/@me/applications/:id/role-connection
   const url = `https://discord.com/api/v10/users/@me/applications/${config.DISCORD_CLIENT_ID}/role-connection`;
-  const accessToken = await getAccessToken(userId, tokens);
+  const accessToken = await getAccessToken(userId);
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -6,6 +6,9 @@ import Router from 'express'
 import passport from "passport";
 import DiscordStrategy from "passport-discord";
 import refresh from "passport-oauth2-refresh";
+const { createSSRApp } = require("vue");
+const { renderToString } = require("@vue/server-renderer");
+const Profile = require("./views/profile.vue").default;
 
 const router = Router()
 
@@ -21,13 +24,59 @@ router.get('/authtest', (req, res) => {
     }
 })
 
-// TODO: replace with non-placeholder redirects
-router.get('/success', (req, res) => {
-    res.send('auth success')
-})
 router.get('/failed', (req, res) => {
     res.send('auth failed')
 })
+
+router.get("/profile", async (req, res) => {
+    if (req.isAuthenticated()) {
+        try {
+            const app = createSSRApp(Profile, { user: req.user });
+            const html = await renderToString(app);
+
+            res.send(html);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal Server Error");
+        }
+    } else {
+        res.redirect("/login");
+    }
+});
+
+router.get('/profile/update', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.send(`
+      <form action="/profile/update" method="post">
+        <label for="gameId">Enter your game ID:</label>
+        <input type="text" id="gameId" name="gameId">
+        <button type="submit">Submit</button>
+      </form>
+    `);
+    } else {
+        res.redirect('/login');
+    }
+});
+
+router.post('/profile/update', async (req, res) => {
+    if (req.isAuthenticated()) {
+        try {
+            // Find the current user
+            const user = await storage.User.findOne({discordId: req.user.id});
+
+            // Update the user's game ID
+            user.gameId.en = req.body.gameId;
+
+            await user.save();
+
+            res.redirect('/profile');
+        } catch (error) {
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect('/login');
+    }
+});
 
 /**
  * Route configured in the Discord developer console which facilitates the
@@ -35,7 +84,7 @@ router.get('/failed', (req, res) => {
  * To start the flow, generate the OAuth2 consent dialog url for Discord,
  * and redirect the user there.
  */
-router.get('/linked-role', async (req, res) => {
+router.get('/login', async (req, res) => {
     const {url, state} = discord.getOAuthUrl();
 
     // Store the signed state param in the user's cookies so we can verify
@@ -59,7 +108,7 @@ router.get('/linked-role', async (req, res) => {
 router.get('/discord-oauth-callback', passport.authenticate('discord', {
     failureRedirect: '/failed'
 }), function (req, res) {
-    res.redirect('/success')
+    res.redirect('/profile')
 });
 
 /**
@@ -79,19 +128,15 @@ router.post('/update-metadata', async (req, res) => {
 });
 
 /**
- * Given a Discord UserId, push static make-believe data to the Discord
+ * Given a Discord UserId, push data to the Discord
  * metadata endpoint.
  */
 async function updateMetadata(userId) {
-    // Fetch the Discord tokens from storage
-    const tokens = await storage.getDiscordTokens(userId);
-
     let metadata = {};
     try {
-        // Fetch the new metadata you want to use from an external source.
-        // This data could be POST-ed to this endpoint, but every service
-        // is going to be different.  To keep the example simple, we'll
-        // just generate some random data.
+        // 1. get user's game ID
+        // 2. query bestdori
+        // 3. extract data
         metadata = {
             cookieseaten: 1483,
             allergictonuts: 0, // 0 for false, 1 for true
@@ -107,7 +152,7 @@ async function updateMetadata(userId) {
     }
 
     // Push the data to Discord.
-    await discord.pushMetadata(userId, tokens, metadata);
+    await discord.pushMetadata(userId, metadata);
 }
 
 export default router;
