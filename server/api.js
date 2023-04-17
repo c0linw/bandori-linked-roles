@@ -89,7 +89,7 @@ router.get('/login', async (req, res) => {
 router.get('/discord-oauth-callback', passport.authenticate('discord', {
     failureRedirect: '/failed'
 }), function (req, res) {
-    res.redirect('/profile')
+    res.redirect('/profile/update')
 });
 
 /**
@@ -128,7 +128,7 @@ async function updateMetadata(userId) {
             let special_fcs = parseInt(data.data.profile.fullComboMusicCountMap.entries.special, 10);
             metadata = {
                 player_rank: data.data.profile.rank,
-                fc_count: fc_count,
+                fc_count: expert_fcs + special_fcs,
                 id: data.data.profile.userId,
             };
             // Push the data to Discord.

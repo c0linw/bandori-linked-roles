@@ -104,7 +104,7 @@ async function pushMetadata(userId, metadata) {
   const url = `https://discord.com/api/v10/users/@me/applications/${config.DISCORD_CLIENT_ID}/role-connection`;
   const accessToken = await getAccessToken(userId);
   const body = {
-    platform_name: 'Kanon Bot Linked Roles',
+    platform_name: 'Bandori In-Game Stats',
     metadata,
   };
   const response = await fetch(url, {
