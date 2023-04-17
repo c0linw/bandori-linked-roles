@@ -15,7 +15,7 @@ router.get('/authtest', (req, res) => {
     if (req.isAuthenticated()) {
         res.send('You are authenticated')
     } else {
-        res.send('You are not authenticated')
+        res.status(401).send('You are not authenticated')
     }
 })
 
@@ -23,19 +23,23 @@ router.get('/failed', (req, res) => {
     res.send('auth failed')
 })
 
-router.get('/profile/update', (req, res) => {
+router.get('/accounts', async (req, res) => {
     if (req.isAuthenticated()) {
-        res.send(`
-      <form action="/profile/update" method="post">
-        <label for="gameId">Enter your game ID:</label>
-        <input type="text" id="gameId" name="gameId">
-        <button type="submit">Submit</button>
-      </form>
-    `);
+        try {
+            const user = await storage.User.findOne({discordId: req.user.discordId});
+            if (user) {
+                res.send(user.gameId);
+            } else {
+                res.status(400).send("User not found");
+            }
+        } catch (e) {
+            console.error(e);
+            res.status(500).send("Internal server error");
+        }
     } else {
-        res.redirect('/login');
+        res.status(401).send('Please authenticate Discord account');
     }
-});
+})
 
 router.post('/profile/update', async (req, res) => {
     if (req.isAuthenticated()) {
@@ -44,7 +48,12 @@ router.post('/profile/update', async (req, res) => {
             const user = await storage.User.findOne({discordId: req.user.discordId});
 
             // Update the user's game ID
-            //user.gameId.en = req.body.gameId;
+            if (req.body.en) {
+                user.gameId.en = req.body.en;
+            }
+            if (req.body.jp) {
+                user.gameId.jp = req.body.jp;
+            }
 
             await user.save();
             await updateMetadata(user.discordId)
@@ -89,7 +98,7 @@ router.get('/login', async (req, res) => {
 router.get('/discord-oauth-callback', passport.authenticate('discord', {
     failureRedirect: '/failed'
 }), function (req, res) {
-    res.redirect('/profile/update')
+    res.redirect(process.env.FRONTEND_URL)
 });
 
 /**

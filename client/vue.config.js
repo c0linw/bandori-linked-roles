@@ -4,7 +4,7 @@ module.exports = defineConfig({
   configureWebpack: {
     devServer: {
       proxy: {
-        '/api': {
+        '^/api': {
           target: 'http://localhost:3000',
         },
       },
