@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const fetch = require('node-fetch');
 
 const storage = require('./storage.js');
-const config = require('./config.js');
+const config = require('./config.js').config;
 const refresh = require('passport-oauth2-refresh');
 
 /**
@@ -66,13 +66,15 @@ async function getOAuthTokens(code) {
  * refresh token to acquire a new, fresh access token.
  */
 async function getAccessToken(userId) {
-  const refreshToken = storage.getRefreshToken(userId)
-  refresh.requestNewAccessToken('discord', refreshToken, function(err, accessToken, refreshToken) {
-    if (err) {
-      throw new Error("failed to fetch new access token using refresh token")
-    }
-    return accessToken;
-  });
+  const refreshToken = await storage.getRefreshToken(userId)
+  return new Promise((resolve, reject) => {
+    refresh.requestNewAccessToken('discord', refreshToken, function(err, accessToken, refreshToken) {
+      if (err) {
+        reject();
+      }
+      resolve(accessToken);
+    });
+  })
 }
 
 /**

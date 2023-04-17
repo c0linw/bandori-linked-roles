@@ -41,16 +41,17 @@ router.post('/profile/update', async (req, res) => {
     if (req.isAuthenticated()) {
         try {
             // Find the current user
-            const user = await storage.User.findOne({discordId: req.user.id});
+            const user = await storage.User.findOne({discordId: req.user.discordId});
 
             // Update the user's game ID
-            user.gameId.en = req.body.gameId;
+            //user.gameId.en = req.body.gameId;
 
             await user.save();
-            await updateMetadata(user.gameId.en)
+            await updateMetadata(user.discordId)
 
             res.redirect('/authtest');
         } catch (error) {
+            console.log(error.message)
             res.status(500).send('Internal Server Error');
         }
     } else {
@@ -123,7 +124,8 @@ async function updateMetadata(userId) {
         if (response.ok) {
             const data = await response.json();
             // TODO: handle bestdori data in a more robust way
-            let fc_count = data.data.profile.fullComboMusicCountMap.entries.expert + data.data.profile.fullComboMusicCountMap.entries.special;
+            let expert_fcs = parseInt(data.data.profile.fullComboMusicCountMap.entries.expert, 10)
+            let special_fcs = parseInt(data.data.profile.fullComboMusicCountMap.entries.special, 10);
             metadata = {
                 player_rank: data.data.profile.rank,
                 fc_count: fc_count,

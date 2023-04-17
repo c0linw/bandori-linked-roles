@@ -40,6 +40,10 @@ const discordStrat = new DiscordStrategy({
                 user = new storage.User({
                     discordId: profile.id,
                     refreshToken: refreshToken,
+                    gameId: {
+                        en: null,
+                        jp: null
+                    }
                 });
 
                 await user.save();
@@ -50,7 +54,10 @@ const discordStrat = new DiscordStrategy({
 
                 // If the user hasn't set their game ID yet, set it to null
                 if (!user.gameId) {
-                    user.gameId = null;
+                    user.gameId = {
+                        en: null,
+                        jp: null
+                    };
                 }
 
                 await user.save();
