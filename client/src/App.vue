@@ -5,11 +5,7 @@
 </template>
 
 <script>
-import axios from "axios";
-const axiosInstance = axios.create({
-  baseURL: `http://localhost:3000`,
-  withCredentials: true
-})
+import axiosInstance from "./axiosInstance.js";
 export default {
 	name: "App",
 	data() {
