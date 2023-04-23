@@ -23,7 +23,7 @@ export default {
 		} catch (e) {
 			if (e.response) {
 				if (e.response.status === 401) {
-					window.location.href = process.env.BACKEND_URL + "/login"
+					window.location.href = process.env.VUE_APP_BACKEND_URL + "/login"
 				}
 			}
 		}
