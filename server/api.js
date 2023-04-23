@@ -48,23 +48,23 @@ router.post('/profile/update', async (req, res) => {
             const user = await storage.User.findOne({discordId: req.user.discordId});
 
             // Update the user's game ID
-            if (req.body.en) {
+            if (req.body.en && req.body.en !== "") {
                 user.gameId.en = req.body.en;
             }
-            if (req.body.jp) {
+            if (req.body.jp && req.body.en !== "") {
                 user.gameId.jp = req.body.jp;
             }
 
             await user.save();
             await updateMetadata(user.discordId)
 
-            res.redirect('/authtest');
+            res.send("success");
         } catch (error) {
             console.log(error.message)
             res.status(500).send('Internal Server Error');
         }
     } else {
-        res.redirect('/login');
+        res.status(401).send('Please authenticate Discord account');
     }
 });
 
