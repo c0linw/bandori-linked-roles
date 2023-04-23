@@ -17,7 +17,6 @@ const corsOptions = {
     origin: process.env.FRONTEND_URL
 };
 
-app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(session({
     secret: config.COOKIE_SECRET,
