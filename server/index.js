@@ -12,11 +12,13 @@ const DiscordStrategy = require("passport-discord").Strategy;
 const storage = require("./storage.js");
 
 const app = express()
-
-app.use(cors({
+const corsOptions = {
     credentials: true,
     origin: process.env.FRONTEND_URL
-}));
+};
+
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(session({
     secret: config.COOKIE_SECRET,
     resave: false,
