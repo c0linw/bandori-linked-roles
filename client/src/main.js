@@ -1,3 +1,5 @@
+const dotenv = require('dotenv');
+dotenv.config()
 import { createApp } from 'vue'
 import App from './App.vue'
 

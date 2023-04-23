@@ -23,7 +23,7 @@ export default {
 		} catch (e) {
 			if (e.response) {
 				if (e.response.status === 401) {
-					window.location.href = "http://localhost:3000/login"
+					window.location.href = process.env.BACKEND_URL + "/login"
 				}
 			}
 		}
