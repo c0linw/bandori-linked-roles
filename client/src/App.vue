@@ -1,10 +1,10 @@
 <template>
 	<div>
-    <form @submit.prevent="updateAccounts">
-      <input v-model="accounts.en">
-      <button>Update EN account</button>
-    </form>
-    {{resultMsg}}
+		<form @submit.prevent="updateAccounts">
+			<input v-model="accounts.en">
+			<button>Update EN account</button>
+		</form>
+		{{resultMsg}}
 	</div>
 </template>
 
@@ -36,16 +36,17 @@ export default {
 	},
 	methods: {
 		async updateAccounts() {
-		  try {
-        const response = await axiosInstance.post("api/profile/update/", this.accounts);
-      } catch (e) {
-        if (e.response) {
-          if (e.response.status === 401) {
-            window.location.href = process.env.VUE_APP_BACKEND_URL + "/login"
-          }
-        }
-        this.resultMsg = e.message;
-      }
+			try {
+				const response = await axiosInstance.post("api/profile/update/", this.accounts);
+				this.resultMsg = response.data
+			} catch (e) {
+				if (e.response) {
+					if (e.response.status === 401) {
+						window.location.href = process.env.VUE_APP_BACKEND_URL + "/login"
+					}
+				}
+				this.resultMsg = e.message;
+			}
 		},
 		async removeAccount() {
 			// call the API to remove the account for a given server
