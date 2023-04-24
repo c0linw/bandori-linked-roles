@@ -37,7 +37,7 @@ export default {
 	methods: {
 		async updateAccounts() {
 			try {
-				const response = await axiosInstance.post("api/profile/update/", this.accounts);
+				const response = await axiosInstance.post("/profile/update", this.accounts);
 				this.resultMsg = response.data
 			} catch (e) {
 				if (e.response) {

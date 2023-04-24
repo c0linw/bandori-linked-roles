@@ -10,6 +10,7 @@ const passport  = require("passport");
 const refresh = require("passport-oauth2-refresh");
 const DiscordStrategy = require("passport-discord").Strategy;
 const storage = require("./storage.js");
+const MongoStore = require('connect-mongo');
 
 const app = express()
 const corsOptions = {
@@ -21,7 +22,8 @@ app.use(cors(corsOptions));
 app.use(session({
     secret: config.COOKIE_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({client: mongoose.connection.getClient()})
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -83,15 +85,6 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (obj, done) {
     done(null, obj);
 });
-
-mongoose
-    .connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-
-    })
-    .then(() => console.log('MongoDB database Connected...'))
-    .catch((err) => console.log(err))
 
 app.use('/', router)
 

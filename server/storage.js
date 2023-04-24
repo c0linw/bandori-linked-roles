@@ -1,4 +1,4 @@
-const {Schema, model} = require('mongoose');
+const {Schema, model, connect} = require('mongoose');
 
 const userSchema = new Schema({
   discordId: String,
@@ -10,6 +10,14 @@ const userSchema = new Schema({
 });
 
 const User = model('User', userSchema)
+
+connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+
+})
+    .then(() => console.log('MongoDB database Connected...'))
+    .catch((err) => console.log(err))
 
 async function storeRefreshToken(userId, token) {
   let user = new User({
